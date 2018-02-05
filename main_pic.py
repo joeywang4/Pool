@@ -5,9 +5,13 @@ import pool_set_bound
 import pool_cue
 import cv2 as cv
 import numpy as np
+import argparse
 
-#name = '/home/joey/py/opencv/camera/117.png'
-name = 'table.png'
+ap = argparse.ArgumentParser()
+ap.add_argument("-f", "--file", required=True, help="Specify file path.")
+args = vars(ap.parse_args())
+
+name = args["file"]
 Img, Table, refPt = None, None, None
 next = True
 
