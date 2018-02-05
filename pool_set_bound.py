@@ -14,7 +14,6 @@ def set_bound(img):
    image = img
    height, width = image.shape[:2]
    refPt = np.array([[0,0],[0,height-1],[width-1,height-1],[width-1,0]])
-   count = 0
    cv.namedWindow("image")
    cv.setMouseCallback("image", click_and_crop)
    cv.imshow('image', image)

@@ -13,7 +13,7 @@ def get_ball(table):
 
    #filter out table hue
    table_hsv = cv.cvtColor(table_blur, cv.COLOR_BGR2HSV)
-   mid_hue = pool_util.avg_hue(table_hsv, 40)
+   mid_hue = pool_util.avg_hue(table_hsv, 50)
    err = 10.01
    lower_hue = np.array([mid_hue - err, 50, 50])
    upper_hue = np.array([mid_hue + err, 255, 255])
@@ -24,6 +24,8 @@ def get_ball(table):
    #change to gray scale and find circles
    table_gray = cv.split(table_masked)[2]
    circles = cv.HoughCircles(table_gray,cv.HOUGH_GRADIENT,1,20,
-                               param1=30,param2=20,minRadius=0,maxRadius=50)
-   circles = np.uint16(np.around(circles))
+                               param1=30,param2=20,minRadius=10,maxRadius=20)
+   if type(circles) == type(None):
+      return None
+   circles = np.int16(np.around(circles))
    return circles

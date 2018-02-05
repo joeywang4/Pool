@@ -27,7 +27,6 @@ Input type: source image(in hsv type), middle region size(in pixel)
 Return type: int
 '''
 def avg_hue(src, mid_size):
-   mid_size = 50   
    height, width, _ = src.shape
    mid_point = [height//2, width//2]
    mid_region = src[mid_point[0]:mid_point[0] + mid_size,
@@ -44,13 +43,13 @@ Show the detected balls
 Input type: balls (numpy array), and image of the table
 Return type: None
 '''
-def draw_ball(balls, image):
-   table = image.copy()
+def draw_ball(balls, table):
    for i in balls[0,:]:
       # draw the outer circle
       cv.circle(table,(i[0],i[1]),i[2],(0,255,0),2)
       # draw the center of the circle
       cv.circle(table,(i[0],i[1]),2,(0,0,255),3)
-   cv.imshow('detected balls', table)
-   cv.waitKey(0)
-   cv.destroyAllWindows()
+
+def draw_cue(table, head, end):
+   cv.line(table, head, end, (255,0,255), thickness=5)
+   cv.drawMarker(table, head, (255,255,0))

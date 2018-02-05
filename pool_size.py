@@ -1,23 +1,6 @@
+import pool_util
 import cv2 as cv
 import numpy as np
-
-'''
-computes the average hue in middle region
-input: source image(in hsv type), middle region size(in pixel)
-return type: int
-'''
-def avg_hue(src, mid_size):
-   mid_size = 50   
-   height, width, _ = src.shape
-   mid_point = [height//2, width//2]
-   mid_region = src[mid_point[0]:mid_point[0] + mid_size,
-                    mid_point[1]:mid_point[1] + mid_size]
-   mid_hue = 0
-   for i in mid_region:
-      for j in i:
-         mid_hue += j[0]
-   mid_hue //= (mid_size**2)
-   return mid_hue
 
 '''
 Returns the inner boundary of the pool table
@@ -29,7 +12,7 @@ def get_boundary(image):
    img_hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
    
    #get middle hue
-   mid_hue = avg_hue(img_hsv, 50)
+   mid_hue = pool_util.avg_hue(img_hsv, 50)
 
    #filter image with specified color
    err = 20.01
@@ -42,11 +25,13 @@ def get_boundary(image):
    rect = cv.getStructuringElement(cv.MORPH_RECT, (15, 15))
    img_filted_open = cv.morphologyEx(img_masked, cv.MORPH_OPEN, rect)
    
-   #find contours, approx poly, find rect
+   #find contours
    img_edge = cv.Canny(img_filted_open, 30, 90)
+   max_rect = cv.boundingRect( img_edge)
+   '''
    img_contours = cv.findContours(img_edge, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)[1]
-   #approx poly
-   img_contours_poly = []
+
+   #approx rect
    rects = []
    index = 0
    for index in range(len(img_contours)):
@@ -57,28 +42,29 @@ def get_boundary(image):
    for rect in rects:
       if max_rect[2]*max_rect[3] < rect[2]*rect[3]:
          max_rect = rect
+'''
    #get the inner table (to get the inside boundary)
    shrink = 0
    table = img[max_rect[1]+shrink : max_rect[1]+max_rect[3]-shrink,
                max_rect[0]+shrink : max_rect[0]+max_rect[2]-shrink]
-   
    table_gray = cv.cvtColor(table, cv.COLOR_BGR2GRAY)
    table_mid_point = [max_rect[3]//2 - shrink, max_rect[2]//2 - shrink]
    mid_val = table_gray[table_mid_point[0],table_mid_point[1]]
    table_bin = cv.threshold(table_gray, mid_val-30, 255, cv.THRESH_BINARY_INV)[1]
-   
    #opening
    rect = cv.getStructuringElement(cv.MORPH_RECT, (5, 5))
    table_filted_open = cv.morphologyEx(table_bin, cv.MORPH_OPEN, rect)
    
    #canny
-   table_filted_edge = cv.Canny(table_filted_open, 50, 0)
+   table_filted_edge = cv.Canny(table_filted_open, 30, 90)
    #hough lines
    hough_lines = cv.HoughLinesP(table_filted_edge, 0.01, np.pi/180, 15, 0,50, 5)
    
    #sort lines
    vert_lines = []
    hori_lines = []
+   if type(hough_lines) == type(None):
+      return None
    for hough_line in hough_lines:
       if hough_line[0][0] == hough_line[0][2]:
          vert_lines.append(hough_line[0])
