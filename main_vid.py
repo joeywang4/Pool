@@ -5,9 +5,18 @@ import pool_set_bound
 import pool_cue
 import cv2 as cv
 import numpy as np
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-c", "--camera", required=False, type = int, help="Specify camera if there are multiple ones.")
+args = vars(ap.parse_args())
+if type(args["camera"]) == type(None):
+   cam = 0
+else:
+   cam = args["camera"]
 
 #use cv.VideoCapture(1) if webcam is not the default camera
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(cam)
 Img, Table, refPt = None, None, None
 next = True
 
