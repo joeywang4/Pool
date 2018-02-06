@@ -6,6 +6,7 @@ import pool_cue
 import cv2 as cv
 import numpy as np
 import argparse
+from operator import itemgetter
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-c", "--camera", required=False, type = int, help="Specify camera if there are multiple ones.")
@@ -17,7 +18,7 @@ else:
 
 #use cv.VideoCapture(1) if webcam is not the default camera
 cap = cv.VideoCapture(cam)
-Img, Table, refPt = None, None, None
+Img, Table, refPt, old_balls = None, None, None, None
 next = True
 
 def Next_command():
@@ -38,6 +39,8 @@ def Next_command():
       cue_detect()
    elif command == 'g':
       ball_cue_detect()
+   elif command == 'h':
+      smooth_detect()
    elif command == 'q':
       return False
    else:
@@ -132,6 +135,53 @@ def ball_cue_detect():
          break
    cv.destroyAllWindows()
 
+def smooth_detect():
+   if type(Table) == type(None):
+      print('Error, Please set boundary first!')
+      return False
+   print('Press "q" to exit...')
+   global old_balls
+   while True:
+      get_frame()
+      head, end = pool_cue.get_cue(Table)
+      balls = pool_ball.get_ball(Table)
+      table = Table.copy()
+      if head != end:
+         pool_util.draw_cue(table, head, end)
+      if type(balls) != type(None):
+         if type(old_balls) != type(None):
+            if check_diff(balls):
+               pool_util.draw_ball(balls, table)
+            else: pool_util.draw_ball(old_balls, table)
+         else:
+            balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
+            balls = np.array([balls])
+            old_balls = balls
+            pool_util.draw_ball(balls, table)
+      cv.imshow('table', table)
+      tmp = cv.waitKey(1) & 0xFF
+      if tmp == ord('q'):
+         break
+   cv.destroyAllWindows()
+
+'''
+return True if exists difference
+'''
+def check_diff(balls):
+   global old_balls
+   balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
+   balls = np.array([balls])
+   if len(old_balls[0]) != len(balls[0]):
+      old_balls = balls
+      return True
+   for i in range(len(balls[0])):
+      if not(abs(balls[0][i][0] - old_balls[0][i][0]) <= 5
+         and abs(balls[0][i][1] - old_balls[0][i][1]) <= 5):
+         old_balls = balls
+         return True
+   return False
+
+
 def show_help():
    print('a. get next frame')
    print('b. set boundary (auto)')
@@ -140,6 +190,7 @@ def show_help():
    print('e. start ball detection')
    print('f. start cue detection')
    print('g. start ball and cue detection')
+   print('h. ball and cue detection v2')
    print('q. quit')
 
 #----------------------------

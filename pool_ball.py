@@ -24,7 +24,7 @@ def get_ball(table):
    #change to gray scale and find circles
    table_gray = cv.split(table_masked)[2]
    circles = cv.HoughCircles(table_gray,cv.HOUGH_GRADIENT,1,20,
-                               param1=30,param2=20,minRadius=10,maxRadius=20)
+                               param1=30,param2=20,minRadius=8,maxRadius=15)
    if type(circles) == type(None):
       return None
    circles = np.int16(np.around(circles))

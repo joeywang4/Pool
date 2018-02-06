@@ -40,16 +40,22 @@ def avg_hue(src, mid_size):
 
 '''
 Show the detected balls
+*change the default radius if it doesn't fit
 Input type: balls (numpy array), and image of the table
 Return type: None
 '''
-def draw_ball(balls, table):
-   for i in balls[0,:]:
+def draw_ball(balls, table, radius = 12):
+   for i in balls[0]:
       # draw the outer circle
-      cv.circle(table,(i[0],i[1]),i[2],(0,255,0),2)
+      cv.circle(table,(i[0],i[1]),radius,(0,255,0),2)
       # draw the center of the circle
       cv.circle(table,(i[0],i[1]),2,(0,0,255),3)
 
+'''
+Show the detected cue
+Input type: table image, head of the cue and end of the cue
+Return type: None
+'''
 def draw_cue(table, head, end):
    cv.line(table, head, end, (255,0,255), thickness=5)
    cv.drawMarker(table, head, (255,255,0))
