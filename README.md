@@ -1,6 +1,6 @@
 # Pool
 Use main_pic.py to detect a single picture, and main_vid.py to record the pool table via a webcam.
-usage: python3 main_pic.py -f your_file_path or python3 main_vid.py -c your_camera_number
+<br>usage: python3 main_pic.py -f your_file_path or python3 main_vid.py -c your_camera_number
 
 work flow:
 1. use 'a' to get the image
