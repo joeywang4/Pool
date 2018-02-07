@@ -86,7 +86,7 @@ def show_cue():
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
-   head, end = pool_cue.get_cue(Table)
+   head, end, _ = pool_cue.get_cue(Table)
    if head == end:
       print('No cue found...')
       return False

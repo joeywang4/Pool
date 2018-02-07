@@ -16,7 +16,7 @@ def get_cue(table):
    table_filted_edge = cv.Canny(table_masked, 60, 180)
    hough_lines = cv.HoughLinesP(table_filted_edge, 1, np.pi/180, 90, 0,50, 10)
    if type(hough_lines) == type(None):
-      return (0,0),(0,0)
+      return (0,0),(0,0),None
    #calculate the average slope
    total_x, total_y = 0,0
    for line in hough_lines:
@@ -63,13 +63,18 @@ def get_cue(table):
       if total_x != 0:
          end = (min_pt[0], max_pt[1]-(max_pt[0]-min_pt[0])*(total_y/total_x))
       else:
-         end = (min_pt[0], max_pt[1]-50*(total_y//total_y))
+         end = (max_pt[0], max_pt[1]-150*(sign(max_pt[1]-min_pt[1])))
    else:
       head = min_pt
       if total_x != 0:
          end = (max_pt[0], min_pt[1]+(max_pt[0]-min_pt[0])*(total_y/total_x))
       else:
-         end = (min_pt[0], max_pt[1]+50*(total_y//total_y))
+         end = (min_pt[0], min_pt[1]-150*(sign(min_pt[1]-max_pt[1])))
    head = int(head[0]//1), int(head[1]//1)
    end = int(end[0]//1), int(end[1]//1)
-   return head, end
+   return head, end, avg_deg
+
+def sign(num):
+   if num >=0:
+      return 1
+   else: return -1

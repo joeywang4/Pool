@@ -105,7 +105,7 @@ def cue_detect():
    print('Press "q" to exit...')
    while True:
       get_frame()
-      head, end = pool_cue.get_cue(Table)
+      head, end, _ = pool_cue.get_cue(Table)
       table = Table.copy()
       if head != end:
          pool_util.draw_cue(table, head, end)
@@ -122,7 +122,7 @@ def ball_cue_detect():
    print('Press "q" to exit...')
    while True:
       get_frame()
-      head, end = pool_cue.get_cue(Table)
+      head, end, _ = pool_cue.get_cue(Table)
       balls = pool_ball.get_ball(Table)
       table = Table.copy()
       if head != end:
@@ -143,16 +143,15 @@ def smooth_detect():
    global old_balls
    while True:
       get_frame()
-      head, end = pool_cue.get_cue(Table)
+      head, end, _ = pool_cue.get_cue(Table)
       balls = pool_ball.get_ball(Table)
       table = Table.copy()
       if head != end:
          pool_util.draw_cue(table, head, end)
       if type(balls) != type(None):
          if type(old_balls) != type(None):
-            if check_diff(balls):
-               pool_util.draw_ball(balls, table)
-            else: pool_util.draw_ball(old_balls, table)
+            check_diff(balls)
+            pool_util.draw_ball(old_balls, table)
          else:
             balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
             balls = np.array([balls])
