@@ -18,7 +18,7 @@ else:
 
 #use cv.VideoCapture(1) if webcam is not the default camera
 cap = cv.VideoCapture(cam)
-Img, Table, refPt, old_balls = None, None, None, None
+Img, Table, refPt, old_balls, BallsNum = None, None, None, None, None
 next = True
 
 def Next_command():
@@ -151,11 +151,13 @@ def smooth_detect():
       if type(balls) != type(None):
          if type(old_balls) != type(None):
             check_diff(balls)
+            BallsNum = len(balls[0])
             pool_util.draw_ball(old_balls, table)
          else:
-            balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
+            balls = np.array(sorted(balls[0], key=pool_ball.posOrder))
             balls = np.array([balls])
             old_balls = balls
+            BallsNum = len(balls[0])
             pool_util.draw_ball(balls, table)
       cv.imshow('table', table)
       tmp = cv.waitKey(1) & 0xFF
@@ -168,7 +170,7 @@ return True if exists difference
 '''
 def check_diff(balls):
    global old_balls
-   balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
+   balls = np.array(sorted(balls[0], key=pool_ball.posOrder))
    balls = np.array([balls])
    if len(old_balls[0]) != len(balls[0]):
       old_balls = balls
