@@ -3,6 +3,7 @@ import pool_ball
 import pool_util
 import pool_set_bound
 import pool_cue
+import time
 import cv2 as cv
 import numpy as np
 import argparse
@@ -19,6 +20,7 @@ else:
 #use cv.VideoCapture(1) if webcam is not the default camera
 cap = cv.VideoCapture(cam)
 Img, Table, old_Table, refPt, old_balls, BallsNum = None, None, None, None, None, None
+stableTableDiff = None
 lower_hue, upper_hue = None, None
 next = True
 
@@ -79,7 +81,19 @@ def get_table(click):
    err = 10.01
    lower_hue = np.array([mid_hue - err, 50, 50])
    upper_hue = np.array([mid_hue + err, 255, 255])
+   calculateStableTableDiff()
    return True
+
+def calculateStableTableDiff():
+   global stableTableDiff
+   global Table
+   global old_Table
+   tableSum = 0.0
+   time.sleep(1)
+   for i in range(10):
+      get_frame()
+      tableSum += diff_table(old_Table, Table)
+   stableTableDiff = tableSum/10
 
 def show_table():
    if type(Table) == type(None):
@@ -157,6 +171,7 @@ def smooth_detect():
    global upper_hue
    global Table
    global old_Table
+   global stableTableDiff
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
@@ -164,7 +179,7 @@ def smooth_detect():
    global old_balls
    while True:
       get_frame()
-      if diff_table(old_Table, Table)<1900000:
+      if diff_table(old_Table, Table)<stableTableDiff:
          continue
       head, end, _ = pool_cue.get_cue(Table)
       balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
