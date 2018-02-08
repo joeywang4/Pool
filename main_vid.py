@@ -18,7 +18,7 @@ else:
 
 #use cv.VideoCapture(1) if webcam is not the default camera
 cap = cv.VideoCapture(cam)
-Img, Table, refPt, old_balls, BallsNum = None, None, None, None, None
+Img, Table, old_Table, refPt, old_balls, BallsNum = None, None, None, None, None, None
 lower_hue, upper_hue = None, None
 next = True
 
@@ -52,7 +52,9 @@ def Next_command():
 def get_frame():
    global Img
    global Table
+   global old_Table
    Img = cap.read()[1]
+   old_Table = Table
    if type(refPt) != type(None):
       Table = pool_util.get_table(refPt, Img)
 
@@ -153,6 +155,8 @@ def ball_cue_detect():
 def smooth_detect():
    global lower_hue
    global upper_hue
+   global Table
+   global old_Table
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
@@ -160,6 +164,8 @@ def smooth_detect():
    global old_balls
    while True:
       get_frame()
+      if diff_table(old_Table, Table)<1900000:
+         continue
       head, end, _ = pool_cue.get_cue(Table)
       balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
       table = Table.copy()
@@ -199,6 +205,12 @@ def check_diff(balls):
          return True
    return False
 
+def diff_table(img1, img2):
+   diff = cv.absdiff(Table,old_Table)
+   #for i in range(3):
+     # idx = diff[:,:,i] < 10
+     # diff[idx] = 0
+   return np.sum(np.sum(diff))
 
 def show_help():
    print('a. get next frame')
