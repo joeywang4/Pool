@@ -19,6 +19,7 @@ else:
 #use cv.VideoCapture(1) if webcam is not the default camera
 cap = cv.VideoCapture(cam)
 Img, Table, refPt, old_balls, BallsNum = None, None, None, None, None
+lower_hue, upper_hue = None, None
 next = True
 
 def Next_command():
@@ -58,6 +59,8 @@ def get_frame():
 def get_table(click):
    global refPt
    global Table
+   global lower_hue
+   global upper_hue
    if type(Img) == type(None):
       print('Error, Please get frame first!')
       return False
@@ -66,6 +69,14 @@ def get_table(click):
    else:
       refPt = pool_size.get_boundary(Img)
    Table = pool_util.get_table(refPt, Img)
+   
+   #calculate table hue
+   table_blur = cv.medianBlur(Table,5)
+   table_hsv = cv.cvtColor(table_blur, cv.COLOR_BGR2HSV)
+   mid_hue = pool_util.avg_hue(table_hsv, 50)
+   err = 10.01
+   lower_hue = np.array([mid_hue - err, 50, 50])
+   upper_hue = np.array([mid_hue + err, 255, 255])
    return True
 
 def show_table():
@@ -82,13 +93,15 @@ def show_table():
    cv.destroyAllWindows()
 
 def ball_detect():
+   global lower_hue
+   global upper_hue
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
    print('Press "q" to exit...')
    while True:
       get_frame()
-      balls = pool_ball.get_ball(Table)
+      balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
       table = Table.copy()
       if type(balls) != type(None):
          pool_util.draw_ball(balls, table)
@@ -116,6 +129,8 @@ def cue_detect():
    cv.destroyAllWindows()
 
 def ball_cue_detect():
+   global lower_hue
+   global upper_hue
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
@@ -123,7 +138,7 @@ def ball_cue_detect():
    while True:
       get_frame()
       head, end, _ = pool_cue.get_cue(Table)
-      balls = pool_ball.get_ball(Table)
+      balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
       table = Table.copy()
       if head != end:
          pool_util.draw_cue(table, head, end)
@@ -136,6 +151,8 @@ def ball_cue_detect():
    cv.destroyAllWindows()
 
 def smooth_detect():
+   global lower_hue
+   global upper_hue
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
@@ -144,7 +161,7 @@ def smooth_detect():
    while True:
       get_frame()
       head, end, _ = pool_cue.get_cue(Table)
-      balls = pool_ball.get_ball(Table)
+      balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
       table = Table.copy()
       if head != end:
          pool_util.draw_cue(table, head, end)
