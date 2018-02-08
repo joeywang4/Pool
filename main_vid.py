@@ -93,7 +93,7 @@ def calculateStableTableDiff():
    for i in range(10):
       get_frame()
       tableSum += diff_table(old_Table, Table)
-   stableTableDiff = tableSum/10
+   stableTableDiff = tableSum/9
 
 def show_table():
    if type(Table) == type(None):
@@ -179,7 +179,8 @@ def smooth_detect():
    global old_balls
    while True:
       get_frame()
-      if diff_table(old_Table, Table)<stableTableDiff:
+      if diff_table(old_Table, Table)<stableTableDiff and  type(old_balls) != type(None):
+         pool_util.draw_ball(old_balls, Table)
          continue
       head, end, _ = pool_cue.get_cue(Table)
       balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
@@ -221,6 +222,7 @@ def check_diff(balls):
    return False
 
 def diff_table(img1, img2):
+   #return 10000000 #stablization switch 
    diff = cv.absdiff(Table,old_Table)
    #for i in range(3):
      # idx = diff[:,:,i] < 10
