@@ -1,4 +1,4 @@
 import pool
+import main_fun
 
-pool.init(1)
-pool.detect()
+main_fun.main()
