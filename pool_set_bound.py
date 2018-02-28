@@ -21,6 +21,17 @@ def set_bound(img):
    cv.destroyAllWindows()
    return refPt
 
+def set_bound_dead(img):
+   global image
+   global refPt
+   global width
+   global height
+   image = img
+   height, width = image.shape[:2]
+   refPt = np.array([[0,0],[0,height-1],[width-1,height-1],[width-1,0]])
+   # refPt is customed
+   return refPt
+
 def click_and_crop(event, x, y, flags, param):
    # grab references to the global variables
    global refPt

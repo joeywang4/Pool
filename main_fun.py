@@ -65,13 +65,14 @@ def get_table(click):
    global Table
    global lower_hue
    global upper_hue
+   global Img
    if type(Img) == type(None):
       print('Error, Please get frame first!')
       return False
    if click:
       refPt = pool_set_bound.set_bound(Img)
    else:
-      refPt = pool_size.get_boundary(Img)
+      refPt = pool_set_bound.set_bound_dead(Img)
    Table = pool_util.get_table(refPt, Img)
    
    #calculate table hue
@@ -245,5 +246,5 @@ def show_help():
 #----------------------------
 def main():
     get_frame()
-    get_table()
-    ball_cue_detect
+    get_table(False)
+    ball_cue_detect()
