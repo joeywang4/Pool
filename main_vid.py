@@ -3,6 +3,7 @@ import pool_ball
 import pool_util
 import pool_set_bound
 import pool_cue
+import time
 import cv2 as cv
 import numpy as np
 import argparse
@@ -18,7 +19,9 @@ else:
 
 #use cv.VideoCapture(1) if webcam is not the default camera
 cap = cv.VideoCapture(cam)
-Img, Table, refPt, old_balls = None, None, None, None
+Img, Table, old_Table, refPt, old_balls, BallsNum = None, None, None, None, None, None
+stableTableDiff = None
+lower_hue, upper_hue = None, None
 next = True
 
 def Next_command():
@@ -51,13 +54,17 @@ def Next_command():
 def get_frame():
    global Img
    global Table
+   global old_Table
    Img = cap.read()[1]
+   old_Table = Table
    if type(refPt) != type(None):
       Table = pool_util.get_table(refPt, Img)
 
 def get_table(click):
    global refPt
    global Table
+   global lower_hue
+   global upper_hue
    if type(Img) == type(None):
       print('Error, Please get frame first!')
       return False
@@ -66,7 +73,27 @@ def get_table(click):
    else:
       refPt = pool_size.get_boundary(Img)
    Table = pool_util.get_table(refPt, Img)
+   
+   #calculate table hue
+   table_blur = cv.medianBlur(Table,5)
+   table_hsv = cv.cvtColor(table_blur, cv.COLOR_BGR2HSV)
+   mid_hue = pool_util.avg_hue(table_hsv, 50)
+   err = 10.01
+   lower_hue = np.array([mid_hue - err, 50, 50])
+   upper_hue = np.array([mid_hue + err, 255, 255])
+   calculateStableTableDiff()
    return True
+
+def calculateStableTableDiff():
+   global stableTableDiff
+   global Table
+   global old_Table
+   tableSum = 0.0
+   time.sleep(1)
+   for i in range(10):
+      get_frame()
+      tableSum += diff_table(old_Table, Table)
+   stableTableDiff = tableSum/9
 
 def show_table():
    if type(Table) == type(None):
@@ -82,13 +109,15 @@ def show_table():
    cv.destroyAllWindows()
 
 def ball_detect():
+   global lower_hue
+   global upper_hue
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
    print('Press "q" to exit...')
    while True:
       get_frame()
-      balls = pool_ball.get_ball(Table)
+      balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
       table = Table.copy()
       if type(balls) != type(None):
          pool_util.draw_ball(balls, table)
@@ -116,6 +145,8 @@ def cue_detect():
    cv.destroyAllWindows()
 
 def ball_cue_detect():
+   global lower_hue
+   global upper_hue
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
@@ -123,7 +154,7 @@ def ball_cue_detect():
    while True:
       get_frame()
       head, end, _ = pool_cue.get_cue(Table)
-      balls = pool_ball.get_ball(Table)
+      balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
       table = Table.copy()
       if head != end:
          pool_util.draw_cue(table, head, end)
@@ -136,6 +167,11 @@ def ball_cue_detect():
    cv.destroyAllWindows()
 
 def smooth_detect():
+   global lower_hue
+   global upper_hue
+   global Table
+   global old_Table
+   global stableTableDiff
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
@@ -143,19 +179,24 @@ def smooth_detect():
    global old_balls
    while True:
       get_frame()
+      if diff_table(old_Table, Table)<stableTableDiff and  type(old_balls) != type(None):
+         pool_util.draw_ball(old_balls, Table)
+         continue
       head, end, _ = pool_cue.get_cue(Table)
-      balls = pool_ball.get_ball(Table)
+      balls = pool_ball.get_ball(Table,lower_hue,upper_hue)
       table = Table.copy()
       if head != end:
          pool_util.draw_cue(table, head, end)
       if type(balls) != type(None):
          if type(old_balls) != type(None):
             check_diff(balls)
+            BallsNum = len(balls[0])
             pool_util.draw_ball(old_balls, table)
          else:
-            balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
+            balls = np.array(sorted(balls[0], key=pool_ball.posOrder))
             balls = np.array([balls])
             old_balls = balls
+            BallsNum = len(balls[0])
             pool_util.draw_ball(balls, table)
       cv.imshow('table', table)
       tmp = cv.waitKey(1) & 0xFF
@@ -168,7 +209,7 @@ return True if exists difference
 '''
 def check_diff(balls):
    global old_balls
-   balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
+   balls = np.array(sorted(balls[0], key=pool_ball.posOrder))
    balls = np.array([balls])
    if len(old_balls[0]) != len(balls[0]):
       old_balls = balls
@@ -180,6 +221,13 @@ def check_diff(balls):
          return True
    return False
 
+def diff_table(img1, img2):
+   #return 10000000 #stablization switch 
+   diff = cv.absdiff(Table,old_Table)
+   #for i in range(3):
+     # idx = diff[:,:,i] < 10
+     # diff[idx] = 0
+   return np.sum(np.sum(diff))
 
 def show_help():
    print('a. get next frame')
