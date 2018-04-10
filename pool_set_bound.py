@@ -19,6 +19,7 @@ def set_bound(img):
    cv.imshow('image', image)
    cv.waitKey(0)
    cv.destroyAllWindows()
+   print(refPt)
    return refPt
 
 def click_and_crop(event, x, y, flags, param):
