@@ -10,3 +10,5 @@ work flow:
 4. use 'e', 'f', or 'g' to start detecting balls/cue
 5. use 'q' to quit
 6. use 'help' to show available commands
+
+python3 main.py -r 25 87 607 390
