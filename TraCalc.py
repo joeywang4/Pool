@@ -31,13 +31,13 @@ def calc_read():
     Ball.Ball.radius = RADIUS
     Ball.Ball.corner_width = CORNER_WIDTH
     for id in range(balls.shape[0]):
-        ballList.append(Ball.Ball(id, balls[id]))
+        ballList.append(Ball.Ball(id, balls[id][:2]))
         lineList.append({'id': id, 'lines': list(balls[id][:2])})
 
 def calc_motion(ball):
     if len(lineList[ball.id]['lines']) == 4:
         return
-    id = calc_checkCollision(ball) 
+    id = calc_check_collision(ball) 
     print('id',id,'ball',ballList[id].position)
     #collide
     if id != -1:
@@ -60,14 +60,14 @@ def calc_write():
     print(lineList)
     #json.dumps(lineList)
 
-def calc_checkCollision(ball):
+def calc_check_collision(ball):
     global balls
     nearest = -1, 10000
     for id in range(balls.shape[0]):
         if id == ball.id:
             continue
         #if more than one ball collides, need to compare distance of projection
-        distance = ball.checkCollision(ballList[id])
+        distance = ball.check_collision(ballList[id])
         if distance != -1 and distance < nearest[1]:
             nearest = id, distance
     return nearest[0]
