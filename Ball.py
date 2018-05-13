@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-class ball:
+class Ball:
     width = 0
     height = 0
     radius = 0
@@ -11,6 +11,10 @@ class ball:
         self.pos = pos
         self.heading = heading
         # determine the end point
+        self.endpoint = self.calc_endpoint()
+
+    def set_heading(self, heading):
+        self.heading = heading
         self.endpoint = self.calc_endpoint()
     
     def calc_endpoint(self):
@@ -37,13 +41,13 @@ class ball:
             x_new = x + (y_bond-y)/tan
             y_new = y + (x_bond-x)*tan
 
-            if 0 <= x_new and x_new <= w: 
+            if r <= x_new and x_new <= w-r: 
                 endpoint = np.array([x_new, y_bond])
             else:
                 endpoint = np.array([x_bond, y_new])
         return endpoint
 
-    #after collision, pos will be the collision point, re-calculate the endpoints
+    # after collision, pos will be the collision point, re-calculate the endpoints
     def collide(self, other):
         p1 = self.pos
         p2 = self.endpoint
@@ -55,38 +59,36 @@ class ball:
         # v3 = p4-p1 = t*v1
         # apply law of cosine: v3**2+v2**2-2*v1*v3 = 4r*2
         a = (v1**2).sum()
-        b = -2*np.dot(v1, v2)
+        b_half = -np.dot(v1, v2) # b = -2*np.dot(v1, v2)
         c = (v2**2).sum() - 4*r**2
-        t = (-b-math.sqrt(b**2-4*a*c))/(2*a)
+        # there are two solutions of t, which are the two collision points satisfied
+        # pick the former, or the one with smaller t
+        t = (-b_half-math.sqrt(b_half**2-a*c))/a # t = (-b-math.sqrt(b**2-4*a*c))/(2*a)
         assert t > 0
         p4 = p1 + t*v1
         # the two new headings are orthogonal
+        self.pos = p4
         other.heading = p3-p4
         self.heading = np.array([-other.heading[1], other.heading[0]])
         if np.dot(self.heading, v1) < 0:
             self.heading *= -1
         self.endpoint = self.calc_endpoint()
         other.endpoint = other.calc_endpoint()
-        print('b1:', self.heading)
-        print('b2:', other.heading)
-        
 
-    #check distance from a point (ball's pos) to the line (vector of moving ball)
-    #return the projection distance
-    #return -1 if no collision
+    # check distance from a point (ball's pos) to the line (vector of moving ball)
+    # return the projection distance
+    # return 0 if no collision
     def check_collision(self, other):
         p1 = self.pos
         p2 = self.endpoint
         p3 = other.pos
         r = self.radius
-        print('p1:',p1,'p2:',p2,'p3:',p3)
-        distance = self.dist_pt_line(p3, p1, p2) 
-        print(distance)
+        distance = dist_pt_line(p3, p1, p2) 
 
         if distance < 2*r and np.dot(p3-p1, p2-p1) > 0:
-            return self.projection(p1, p2, p3) 
+            return projection(p1, p2, p3) 
         else:
-            return -1
+            return 0 
     
     def bounce(self):
         h = self.height
@@ -100,33 +102,33 @@ class ball:
         self.pos = self.endpoint 
         self.endpoint = self.calc_endpoint()
 
-    # project common-p2 to common p1
-    def projection(self, common, p1, p2):
-        return np.dot(p1-common, p2-common)/self.dist(common ,p1)
+# project common--p2 to common--p1
+def projection(common, p1, p2):
+    return np.dot(p1-common, p2-common)/dist(common ,p1)
 
-    # dist of pt and line p1-p2
-    def dist_pt_line(self, pt, p1, p2):
-        return self.area(p1, p2, pt)/self.dist(p1, p2)
+# dist of pt and line p1-p2
+def dist_pt_line(pt, p1, p2):
+    return area(p1, p2, pt)/dist(p1, p2)
 
-    def area(self, p1, p2, p3):
-        #return = p1[0]*p2[1]+p2[0]*p3[1]+p3[0]*p1[1]-p1[1]*p2[0]-p2[1]*p3[0]-p3[1]*p1[0]
-        mat = np.ones([3, 3])
-        mat[:, 1:] = np.array([p1, p2, p3]) 
-        return abs(np.linalg.det(mat))
+def area(p1, p2, p3):
+    #return = p1[0]*p2[1]+p2[0]*p3[1]+p3[0]*p1[1]-p1[1]*p2[0]-p2[1]*p3[0]-p3[1]*p1[0]
+    mat = np.ones([3, 3])
+    mat[:, 1:] = np.array([p1, p2, p3]) 
+    return abs(np.linalg.det(mat))
 
-    def dist(self, p1, p2):
-        return np.linalg.norm(p1-p2) 
+def dist(p1, p2):
+    return np.linalg.norm(p1-p2) 
 
 if __name__=='__main__':
 
-    ball.width = 300
-    ball.height = 500
-    ball.radius = 12
+    Ball.width = 300
+    Ball.height = 500
+    Ball.radius = 12
 
     pos = np.array([100, 100])
     heading = np.array([-1, -1])
-    b = ball(0, pos=pos, heading=heading)
-    c = ball(1, pos=np.array([50, 60]))
+    b = Ball(0, pos=pos, heading=heading)
+    c = Ball(1, pos=np.array([50, 60]))
     dist = b.check_collision(c)
     print(dist)
     if dist != -1:
