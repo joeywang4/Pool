@@ -10,7 +10,7 @@ def init_balls(balls):
     Ball.corner_wid = corner_wid
     for id in range(len(balls)):
         ballList.append(Ball(id, balls[id][:2]))
-        lineList.append({'id': id, 'lines': list([balls[id][:2]])})
+        lineList.append({'id': id, 'lines': [list(balls[id][:2])]})
 
 def init_cue(cue):
     global radius, ballList
@@ -40,8 +40,8 @@ def move(ball):
     if c_id != -1:
         c_ball = ballList[c_id]
         ball.collide(c_ball)
-        print(ball.id, 'colide', c_id, ball.pos, c_ball.pos)
-        lineList[ball.id]['lines'].append(ball.pos)
+        print(ball.id, 'colide', c_id, ball.pos.round(), c_ball.pos.round())
+        lineList[ball.id]['lines'].append(list(ball.pos.round().astype('int16')))
 
         move(c_ball)
         move(ball)
@@ -49,8 +49,8 @@ def move(ball):
     # bounce
     else:
         ball.bounce()
-        print(ball.id, 'bounce', ball.pos)
-        lineList[ball.id]['lines'].append(ball.pos)
+        print(ball.id, 'bounce', ball.pos.round())
+        lineList[ball.id]['lines'].append(list(ball.pos.round().astype('int16')))
         move(ball)
 
 def check_collision(ball):
@@ -86,7 +86,6 @@ def init(calballs, cue, wid, hig):
     print('-------start-------')
     move(ballList[first_id])
     print('-------result-------')
-    write()
 
 if __name__=='__main__':
     calballs = np.array([[180, 185], [210, 50], [120, 420], [250, 300], [80, 75]])
@@ -94,3 +93,4 @@ if __name__=='__main__':
     cue = np.array([[200, 200], [220, 220]])
     print('cue:\n', cue) 
     init(calballs, cue, 300, 500) 
+    write()
