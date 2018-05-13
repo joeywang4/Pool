@@ -3,7 +3,7 @@ import pool_ball
 import pool_util
 import pool_set_bound
 import pool_cue
-import TraCalc
+import traj_calc
 import cv2 as cv
 import numpy as np
 import argparse
@@ -11,7 +11,7 @@ from operator import itemgetter
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-c", "--camera", required=False, type = int, help="Specify camera if there are multiple ones.")
-ap.add_argument("-r", "--refpt", required=False, nargs='+', type = int, help="Specify ((minx,miny),(maxx,maxy)) ((x0,y0), (x1, y1)) of the table.")
+ap.add_argument("-r", "--refpt", required=False, nargs='+', type = int, help="Specify minx miny maxx maxy ((x0,y0), (x1, y1)) of the table.")
 args = vars(ap.parse_args())
 if type(args["camera"]) == type(None):
    cam = 1
@@ -49,7 +49,7 @@ def Next_command():
    elif command == 'ball':
       show_balls()
    elif command == 'cue' :
-      show_cue()
+      show_both()
    elif command == 'q':
       return False
    else:
@@ -190,21 +190,28 @@ def show_balls():
    balls = np.add(balls,bound)
    '''
    print('balls', balls)
-   TraCalc.init(balls[0], refPt[2][0]-refPt[0][0], refPt[0][1]-refPt[2][1])
    cv.waitKey(0)
    cv.destroyAllWindows()
 
-def show_cue():
+def show_both():
    if type(Table) == type(None):
       print('Error, Please set boundary first!')
       return False
    head, end, _ = pool_cue.get_cue(Table)
+   balls = pool_ball.get_ball(Table)
    if head == end:
       print('No cue found...')
       return False
+   if type(balls) == type(None):
+      print('No balls found...')
+      return False
    table = Table.copy()
    pool_util.draw_cue(table, head, end)
+   pool_util.draw_ball(balls, table)
    cv.imshow('table', table)
+   print("cue:", head, end)
+   print("balls:", balls[0])
+   traj_calc.init(balls[0], np.array([head, end]), refPt[2][0]-refPt[0][0], refPt[0][1]-refPt[2][1])
    print('Press any key to continue...')
    cv.waitKey(0)
    cv.destroyAllWindows()
