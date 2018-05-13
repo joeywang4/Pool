@@ -86,6 +86,7 @@ def init(calballs, cue, wid, hig):
     print('-------start-------')
     move(ballList[first_id])
     print('-------result-------')
+    return lineList
 
 if __name__=='__main__':
     calballs = np.array([[180, 185], [210, 50], [120, 420], [250, 300], [80, 75]])

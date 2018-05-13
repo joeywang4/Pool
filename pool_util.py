@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+import random
 
 '''
 Draw the table with yellow lines
@@ -59,3 +60,14 @@ Return type: None
 def draw_cue(table, head, end):
    cv.line(table, head, end, (255,0,255), thickness=5)
    cv.drawMarker(table, head, (255,255,0))
+
+def draw_line(table, line_list):
+    for id in line_list:
+        col = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+        for pt in range(len(id["lines"])):
+            if pt == 0:
+                head = tuple(id["lines"][0])
+                pass
+            end = tuple(id["lines"][pt])
+            cv.line(table, head, end, col, thickness=2)
+            head = end
