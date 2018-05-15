@@ -83,6 +83,8 @@ def init(calballs, cue, wid, hig):
     print('width:',wid,'height:',hig)
     init_balls(calballs)
     first_id = init_cue(cue)
+    if first_id == -1:
+        return None
     print('-------start-------')
     move(ballList[first_id])
     print('-------result-------')

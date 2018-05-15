@@ -167,6 +167,12 @@ def smooth_detect():
             balls = np.array([balls])
             old_balls = balls
             pool_util.draw_ball(balls, table)
+      print("cue:", head, end)
+      print("balls:", balls[0])
+      line_list = traj_calc.init(balls[0], np.array([head, end]), refPt[2][0]-refPt[0][0], refPt[0][1]-refPt[2][1])
+      if line_list is not None:
+         print("lines:", line_list)
+         pool_util.draw_line(table,line_list)
       cv.imshow('table', table)
       tmp = cv.waitKey(1) & 0xFF
       if tmp == ord('q'):
