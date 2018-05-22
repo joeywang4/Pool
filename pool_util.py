@@ -63,7 +63,7 @@ def draw_cue(table, head, end):
 
 def draw_line(table, line_list):
     for id in line_list:
-        col = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+        col = (255, 255, 255)
         for pt in range(len(id["lines"])):
             if pt == 0:
                 head = tuple(id["lines"][0])

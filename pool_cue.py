@@ -20,6 +20,7 @@ def get_cue(table):
    #calculate the average slope
    total_x, total_y = 0,0
    for line in hough_lines:
+      #print(line)
       total_x += line[0][2] - line[0][0]
       total_y += line[0][3] - line[0][1]
    if total_x == 0:

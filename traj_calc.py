@@ -29,11 +29,16 @@ def init_cue(cue):
                 nearest['dist'] = dist
     print('first_ball:', nearest['id'], 'dist:', nearest['dist'])
     ballList[nearest['id']].set_heading(head-tail)
+    if nearest['dist'] >= 7*radius: 
+        return -1
     return nearest['id']
 
 def move(ball):
-    global ballList, lineList
-    if len(lineList[ball.id]['lines']) == 4:
+    global ballList, lineList, first_id
+    if ball.id == first_id:
+        if len(lineList[ball.id]['lines']) == 4:
+            return
+    elif len(lineList[ball.id]['lines']) == 2:
         return
     c_id = check_collision(ball) 
     # collide
@@ -72,7 +77,7 @@ def write():
     #json.dumps(lineList)
 
 def init(calballs, cue, wid, hig):
-    global width, height, radius, corner_wid, ballList, lineList
+    global width, height, radius, corner_wid, ballList, lineList, first_id
     width = wid
     height = hig
     radius = 13

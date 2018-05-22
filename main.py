@@ -23,7 +23,7 @@ cap = cv.VideoCapture(cam)
 #below is for mac only
 cap.set(cv.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv.CAP_PROP_FRAME_HEIGHT, 480)
-Img, Table, refPt, old_balls = None, None, None, None
+Img, Table, refPt, old_balls, head_list, end_list = None, None, None, None, [], []
 next = True
 
 def Next_command():
@@ -113,16 +113,13 @@ def cue_detect():
       print('Error, Please set boundary first!')
       return False
    print('Press "q" to exit...')
-   while True:
-      get_frame()
-      head, end, _ = pool_cue.get_cue(Table)
-      table = Table.copy()
-      if head != end:
-         pool_util.draw_cue(table, head, end)
-      cv.imshow('table', table)
-      tmp = cv.waitKey(1) & 0xFF
-      if tmp == ord('q'):
-         break
+   get_frame()
+   head, end, _ = pool_cue.get_cue(Table)
+   table = Table.copy()
+   if head != end:
+      pool_util.draw_cue(table, head, end)
+   cv.imshow('table', table)
+   cv.waitKey(0)
    cv.destroyAllWindows()
 
 def ball_cue_detect():
@@ -146,38 +143,40 @@ def ball_cue_detect():
    cv.destroyAllWindows()
 
 def smooth_detect():
-   if type(Table) == type(None):
-      print('Error, Please set boundary first!')
-      return False
-   print('Press "q" to exit...')
-   global old_balls
-   while True:
-      get_frame()
-      head, end, _ = pool_cue.get_cue(Table)
-      balls = pool_ball.get_ball(Table)
-      table = Table.copy()
-      if head != end:
-         pool_util.draw_cue(table, head, end)
-      if type(balls) != type(None):
-         if type(old_balls) != type(None):
-            check_diff(balls)
-            pool_util.draw_ball(old_balls, table)
-         else:
-            balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
-            balls = np.array([balls])
-            old_balls = balls
-            pool_util.draw_ball(balls, table)
-      print("cue:", head, end)
-      print("balls:", balls[0])
-      line_list = traj_calc.init(balls[0], np.array([head, end]), refPt[2][0]-refPt[0][0], refPt[0][1]-refPt[2][1])
-      if line_list is not None:
-         print("lines:", line_list)
-         pool_util.draw_line(table,line_list)
-      cv.imshow('table', table)
-      tmp = cv.waitKey(1) & 0xFF
-      if tmp == ord('q'):
-         break
-   cv.destroyAllWindows()
+    if type(Table) == type(None):
+        print('Error, Please set boundary first!')
+        return False
+    print('Press "q" to exit...')
+    global old_balls, head_list, end_list
+    while True:
+        get_frame()
+        head, end, _ = pool_cue.get_cue(Table)
+        balls = pool_ball.get_ball(Table)
+        table = Table.copy()
+        if balls is not None:
+            if old_balls is not None:
+                check_diff(balls)
+                pool_util.draw_ball(old_balls, table)
+            else:
+                balls = np.array(sorted(balls[0], key=itemgetter(0,1)))
+                balls = np.array([balls])
+                old_balls = balls
+                pool_util.draw_ball(balls, table)
+            print("balls:", balls[0])
+        if head != end:
+            head, end = check_cue(head, end)
+            pool_util.draw_cue(table, head, end)
+            print("cue:", head, end)
+            if balls is not None:
+                line_list = traj_calc.init(balls[0], np.array([head, end]), refPt[2][0]-refPt[0][0], refPt[0][1]-refPt[2][1])
+                if line_list is not None:
+                    print("lines:", line_list)
+                    pool_util.draw_line(table,line_list)
+        cv.imshow('table', table)
+        tmp = cv.waitKey(1) & 0xFF
+        if tmp == ord('q'):
+            break
+    cv.destroyAllWindows()
 
 def show_balls():
    if type(Table) == type(None):
@@ -240,6 +239,48 @@ def check_diff(balls):
          old_balls = balls
          return True
    return False
+
+def check_cue(head, end):
+    global head_list, end_list
+    head_list.append(head)
+    end_list.append(end)
+    if len(head_list) > 10:
+        del head_list[0]
+        del end_list[0]
+    else:
+        return head, end
+    M_x, m_x, M_y, m_y, t_x, t_y = 0, 1000, 0, 1000, 0, 0 
+    #max_x, min_x, max_y, min_y, total_x, total_y
+    for p in head_list:
+        if p[0] > M_x:
+            M_x = p[0]
+        if p[0] < m_x:
+            m_x = p[0]
+        if p[1] > M_y:
+            M_y = p[1]
+        if p[1] < m_y:
+            m_y = p[1]
+        t_x += p[0]
+        t_y += p[1]
+    t_x = (t_x - M_x - m_x)
+    t_y = (t_y - M_y - m_y)
+    head = (round(t_x/8), round(t_y/8))
+    M_x, m_x, M_y, m_y, t_x, t_y = 0, 1000, 0, 1000, 0, 0 
+    for p in end_list:
+        if p[0] > M_x:
+            M_x = p[0]
+        if p[0] < m_x:
+            m_x = p[0]
+        if p[1] > M_y:
+            M_y = p[1]
+        if p[1] < m_y:
+            m_y = p[1]
+        t_x += p[0]
+        t_y += p[1]
+    t_x = (t_x - M_x - m_x)
+    t_y = (t_y - M_y - m_y)
+    end = (round(t_x/8), round(t_y/8))
+    return head,end
 
 
 def show_help():

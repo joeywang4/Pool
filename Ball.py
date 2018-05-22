@@ -61,10 +61,16 @@ class Ball:
         a = (v1**2).sum()
         b_half = -np.dot(v1, v2) # b = -2*np.dot(v1, v2)
         c = (v2**2).sum() - 4*r**2
+
         # there are two solutions of t, which are the two collision points satisfied
         # pick the former, or the one with smaller t
         t = (-b_half-math.sqrt(b_half**2-a*c))/a # t = (-b-math.sqrt(b**2-4*a*c))/(2*a)
-        assert t > 0
+        if t < 0:
+            t = 0
+        if t <= 0:
+            print('p1', p1, 'p2', p2, 'p3', p3, 'v1', v1, 'v2', v2)
+            print('a', a, 'b', b_half, 'c', c, 't', t)
+            assert t >= 0
         p4 = p1 + t*v1
         # the two new headings are orthogonal
         self.pos = p4
